@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Citizen Help & Complaint Portal</title>
+
+<style>
+:root{
+  --primary:#1e3a8a;
+  --secondary:#2563eb;
+  --bg:#f1f5f9;
+  --card:#ffffff;
+  --text:#0f172a;
+}
+
+*{box-sizing:border-box;}
+
+body{
+  margin:0;
+  font-family:Segoe UI,Roboto,Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+/* HEADER */
+header{
+  background:linear-gradient(135deg,var(--primary),var(--secondary));
+  color:#fff;
+  padding:18px 10px;
+  text-align:center;
+}
+header h1{
+  margin:0;
+  font-size:22px;
+}
+header p{
+  margin:6px 0 0;
+  font-size:13px;
+  opacity:.9;
+}
+
+/* USER PANEL */
+.container{
+  max-width:520px;
+  margin:35px auto;
+  background:var(--card);
+  padding:25px;
+  border-radius:14px;
+  box-shadow:0 15px 40px rgba(0,0,0,.12);
+}
+
+.section-title{
+  font-size:16px;
+  font-weight:600;
+  margin-bottom:15px;
+  border-left:4px solid var(--secondary);
+  padding-left:10px;
+}
+
+input,select,textarea{
+  width:100%;
+  padding:12px 14px;
+  margin-bottom:14px;
+  border-radius:8px;
+  border:1px solid #cbd5e1;
+  font-size:14px;
+}
+
+textarea{
+  resize:none;
+  min-height:90px;
+}
+
+button{
+  width:100%;
+  padding:12px;
+  background:var(--secondary);
+  color:#fff;
+  border:none;
+  border-radius:10px;
+  font-size:15px;
+  font-weight:600;
+  cursor:pointer;
+}
+
+button:hover{
+  background:#1d4ed8;
+}
+
+.success{
+  text-align:center;
+  color:green;
+  font-weight:600;
+  margin-top:10px;
+}
+
+.note{
+  text-align:center;
+  font-size:12px;
+  color:#475569;
+  margin-top:15px;
+}
+
+/* ADMIN PANEL */
+#adminPanel{
+  display:none;
+  max-width:1100px;
+  margin:40px auto;
+  background:#fff;
+  padding:25px;
+  border-radius:14px;
+  box-shadow:0 15px 40px rgba(0,0,0,.12);
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:15px;
+  font-size:13px;
+}
+
+th,td{
+  border:1px solid #e2e8f0;
+  padding:10px;
+  text-align:center;
+}
+
+th{
+  background:#1e40af;
+  color:white;
+}
+
+.delete{
+  background:#dc2626;
+  color:white;
+  border:none;
+  padding:6px 10px;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:12px;
+}
+.delete:hover{
+  background:#b91c1c;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>Citizen Help & Complaint Portal</h1>
+  <p>Secure platform for reporting public & digital issues</p>
+</header>
+
+<!-- USER FORM -->
+<div class="container" id="userPanel">
+  <div class="section-title">Submit Your Complaint</div>
+
+  <form id="complaintForm">
+    <input type="text" id="name" placeholder="Full Name" required>
+    <input type="tel" id="mobile" placeholder="Mobile Number" required>
+
+    <select id="type" required>
+      <option value="">Select Complaint Category</option>
+      <option>Call Abuse</option>
+      <option>Online Fraud</option>
+      <option>Harassment</option>
+      <option>Other</option>
+    </select>
+
+    <textarea id="message" placeholder="Brief description of your issue" required></textarea>
+
+    <button type="submit">Submit Complaint</button>
+  </form>
+
+  <div class="success" id="successMsg"></div>
+
+  <div class="note">
+    Your information is confidential and securely stored.
+  </div>
+</div>
+
+<!-- ADMIN PANEL (SECRET) -->
+<div id="adminPanel">
+  <div class="section-title">Administrative Complaint Records</div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Name</th>
+        <th>Mobile</th>
+        <th>Category</th>
+        <th>Details</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="complaintList"></tbody>
+  </table>
+</div>
+
+<script>
+/* ===== LOCAL STORAGE ===== */
+let complaints = JSON.parse(localStorage.getItem("complaints")) || [];
+
+/* SUBMIT FORM */
+document.getElementById("complaintForm").addEventListener("submit",function(e){
+  e.preventDefault();
+
+  let complaint = {
+    name: document.getElementById("name").value,
+    mobile: document.getElementById("mobile").value,
+    type: document.getElementById("type").value,
+    message: document.getElementById("message").value
+  };
+
+  complaints.push(complaint);
+  localStorage.setItem("complaints", JSON.stringify(complaints));
+
+  document.getElementById("successMsg").innerText =
+    "✔ Complaint registered successfully";
+
+  this.reset();
+});
+
+/* ADMIN RENDER */
+function renderAdmin(){
+  let list = document.getElementById("complaintList");
+  list.innerHTML = "";
+
+  complaints.forEach(function(c,i){
+    list.innerHTML += `
+      <tr>
+        <td>${i+1}</td>
+        <td>${c.name}</td>
+        <td>${c.mobile}</td>
+        <td>${c.type}</td>
+        <td>${c.message}</td>
+        <td>
+          <button class="delete" onclick="deleteComplaint(${i})">
+            Delete
+          </button>
+        </td>
+      </tr>`;
+  });
+}
+
+/* DELETE */
+function deleteComplaint(i){
+  complaints.splice(i,1);
+  localStorage.setItem("complaints", JSON.stringify(complaints));
+  renderAdmin();
+}
+
+/* SECRET ADMIN ACCESS */
+if(window.location.hash === "#admin123"){
+  document.getElementById("userPanel").style.display="none";
+  document.getElementById("adminPanel").style.display="block";
+  renderAdmin();
+}
+</script>
+
+</body>
+</html>
